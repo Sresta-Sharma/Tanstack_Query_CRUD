@@ -8,3 +8,8 @@ export const fetchUsers = async (): Promise<User[]> => {
   const response = await axios.get<User[]>(API_URL)
   return response.data
 }
+
+export const addUser = async (user: Partial<User>) => {
+  const response = await axios.post(API_URL, user)
+  return response.data
+}

@@ -28,8 +28,8 @@ export default function Table() {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4 text-center">User Table</h1>
 
-      <div className="shadow-lg rounded-xl">
-        <table className="w-full table-fixed border border-gray-200 text-xs border-collapse">
+      <div className="shadow-lg rounded-xl overflow-x-auto">
+        <table className="min-w-[900px] w-full table-fixed border border-gray-200 text-xs border-collapse">
           
           {/* HEADER */}
           <thead className="bg-gray-100 text-gray-700">
@@ -62,7 +62,7 @@ export default function Table() {
           {/* BODY */}
           <tbody>
             {data?.map((user: User) => (
-              <tr key={user.id} className="hover:bg-gray-50">
+              <tr key={user.id} className="hover:bg-gray-100">
                 <Td>{user.id}</Td>
                 <Td>{user.name}</Td>
                 <Td>{user.username}</Td>
@@ -81,17 +81,17 @@ export default function Table() {
                 </Td>
 
                 {/* Address */}
-                <Td>{user.address.street}</Td>
-                <Td>{user.address.suite}</Td>
-                <Td>{user.address.city}</Td>
-                <Td>{user.address.zipcode}</Td>
-                <Td>{user.address.geo.lat}</Td>
-                <Td>{user.address.geo.lng}</Td>
+                <Td>{user.address?.street || "-"}</Td>
+                <Td>{user.address?.suite || "-"}</Td>
+                <Td>{user.address?.city || "-"}</Td>
+                <Td>{user.address?.zipcode || "-"}</Td>
+                <Td>{user.address?.geo.lat || "-"}</Td>
+                <Td>{user.address?.geo.lng || "-"}</Td>
 
                 {/* Company */}
-                <Td>{user.company.name}</Td>
-                <Td className="max-w-[120px]">{user.company.catchPhrase}</Td>
-                <Td>{user.company.bs}</Td>
+                <Td>{user.company?.name || "-"}</Td>
+                <Td className="max-w-[120px]">{user.company?.catchPhrase || "-"}</Td>
+                <Td>{user.company?.bs || "-"}</Td>
               </tr>
             ))}
           </tbody>

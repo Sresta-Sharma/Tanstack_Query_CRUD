@@ -1,10 +1,11 @@
 import Table from "./components/Table"
-import "./App.css"
+import AddUser from "./components/AddUser"
 
 function App() {
   return (
     <div>
       <Table />
+       <AddUser />
     </div>
   )
 }
