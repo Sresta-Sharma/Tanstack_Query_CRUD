@@ -1,19 +1,8 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { fetchUsers, deleteUser } from "../api/api"
+import { useUsers, useDeleteUser } from "../hooks/useUsers"
 import type { User } from "../types"
 
-import { toast } from "sonner"
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-
-import { Button } from "@/components/ui/button"
+import ConfirmDialog from "@/components/common/ConfirmDialog"
 
 import {
   Table,
@@ -25,31 +14,14 @@ import {
 } from "@/components/ui/table"
 
 export default function UsersTable({ setSelectedUser }: any) {
-  const queryClient = useQueryClient()
+
+  // Hooks
+  const { data, isLoading, error } = useUsers()
+  const deleteMutation = useDeleteUser()
 
   // Dialog state
   const [open, setOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
-
-  const { data, isLoading, error } = useQuery<User[]>({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: (id) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) =>
-        old.filter((user) => user.id !== id)
-      )
-
-      toast.success("User deleted successfully")
-      setOpen(false)
-    },
-    onError: () => {
-      toast.error("Failed to delete user")
-    },
-  })
 
   if (isLoading)
     return <p className="text-center mt-10 text-gray-500">Loading...</p>
@@ -179,37 +151,22 @@ export default function UsersTable({ setSelectedUser }: any) {
           </Table>
         </div>
 
-        {/* Confirmation Dialog */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-            </DialogHeader>
-
-            <p className="text-sm text-gray-500">
-              This action cannot be undone.
-            </p>
-
-            <DialogFooter>
-              <Button 
-                className="cursor-pointer"
-                variant="outline" 
-                onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-
-              <Button
-                className="cursor-pointer"
-                variant="destructive"
-                onClick={() => {
-                  if (selectedId) deleteMutation.mutate(selectedId)
-                }}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ConfirmDialog
+          open={open}
+          onOpenChange={setOpen}
+          title="Are you sure?"
+          description="This action cannot be undone."
+          onConfirm={() => {
+            if (selectedId) {
+              deleteMutation.mutate(selectedId, {
+                onSuccess: () => {
+                  setOpen(false)       
+                  setSelectedId(null)  
+                },
+              })
+            }
+          }}
+        />
 
       </div>
     </div>

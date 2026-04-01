@@ -1,13 +1,12 @@
 import { useEffect } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { addUser, updateUser } from "../api/api"
+import { useAddUser, useUpdateUser } from "../hooks/useUsers"
 import type { User } from "../types"
 
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { toast } from "sonner"
+import FormField from "./common/FormField"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,25 +21,6 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-// Reusable Field
-const FormField = ({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: React.ReactNode
-}) => (
-  <div className="flex flex-col gap-1 min-h-[64px]">
-    <label className="text-xs text-gray-500">{label}</label>
-    {children}
-    <span className="text-red-500 text-xs h-[16px] leading-tight">
-      {error || ""}
-    </span>
-  </div>
-)
-
 // Error styling
 const inputErrorClass = (error?: any) =>
   error ? "border-red-500 focus-visible:ring-red-500" : ""
@@ -52,37 +32,10 @@ export default function AddUser({
   selectedUser: User | null
   setSelectedUser: (user: User | null) => void
 }) {
-  const queryClient = useQueryClient()
 
-  // Create
-  const addMutation = useMutation({
-    mutationFn: addUser,
-    onSuccess: (newUser) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) => [
-        ...old,
-        { ...newUser, id: old.length + 1 },
-      ])
-      toast.success("User added successfully")
-    },
-    onError: () => {
-      toast.error("Failed to add user")
-    },
-  })
-
-  // Update
-  const updateMutation = useMutation({
-    mutationFn: updateUser,
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) =>
-        old.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-      )
-      toast.success("User updated successfully")
-      setSelectedUser(null)
-    },
-    onError: () => {
-      toast.error("Failed to update user")
-    },
-  })
+  // Using custom hooks
+  const addMutation = useAddUser()
+  const updateMutation = useUpdateUser()
 
   const {
     register,
@@ -106,13 +59,19 @@ export default function AddUser({
 
   const onSubmit = (data: FormData) => {
     if (selectedUser) {
-      updateMutation.mutate({ ...selectedUser, ...data })
+      updateMutation.mutate(
+        { ...selectedUser, ...data },
+        {
+          onSuccess: () => {
+            setSelectedUser(null)
+          },
+        }
+      )
     } else {
       addMutation.mutate(data)
     }
 
     reset()
-    setSelectedUser(null)
   }
 
   return (
