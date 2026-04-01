@@ -2,100 +2,123 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUsers } from "../api/api";
 import type { User } from "../types";
 
-// Reusable table components
-const Th = ({ children, className = "", ...props }: any) => (
-  <th className={`px-2 py-1 border ${className}`} {...props}>
-    {children}
-  </th>
-);
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
-const Td = ({ children, className = "", ...props }: any) => (
-  <td className={`px-2 py-1 border break-words ${className}`} {...props}>
-    {children}
-  </td>
-);
-
-export default function Table() {
+export default function UsersTable() {
   const { data, isLoading, error } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
 
-  if (isLoading) return <p className="text-center mt-10">Loading...</p>;
-  if (error) return <p className="text-center text-red-500">Error fetching users!</p>;
+  if (isLoading)
+    return <p className="text-center mt-10 text-gray-500">Loading...</p>;
+
+  if (error)
+    return (
+      <p className="text-center text-red-500 mt-10">
+        Error fetching users!
+      </p>
+    );
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">User Table</h1>
+    <div className="bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6">
 
-      <div className="shadow-lg rounded-xl overflow-x-auto">
-        <table className="min-w-[900px] w-full table-fixed border border-gray-200 text-xs border-collapse">
-          
-          {/* HEADER */}
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <Th rowSpan={2} className="w-10">ID</Th>
-              <Th rowSpan={2} className="w-28">Name</Th>
-              <Th rowSpan={2} className="w-24">Username</Th>
-              <Th rowSpan={2} className="w-36">Email</Th>
-              <Th rowSpan={2} className="w-28">Phone</Th>
-              <Th rowSpan={2} className="w-28">Website</Th>
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+          User Table
+        </h1>
 
-              <Th colSpan={6} className="text-center">Address</Th>
-              <Th colSpan={3} className="text-center">Company</Th>
-            </tr>
+        {/* Table Card */}
+        <div className="bg-white rounded-2xl shadow-md border overflow-x-auto">
 
-            <tr>
-              <Th>Street</Th>
-              <Th>Suite</Th>
-              <Th>City</Th>
-              <Th>Zip</Th>
-              <Th>Lat</Th>
-              <Th>Lng</Th>
+          <Table className="min-w-[1000px] text-xs">
 
-              <Th>Name</Th>
-              <Th>Phrase</Th>
-              <Th>BS</Th>
-            </tr>
-          </thead>
+            {/* HEADER */}
+            <TableHeader className="bg-gray-100 text-gray-700 border-b sticky top-0 z-10">
+              <TableRow>
+                <TableHead className="font-semibold" rowSpan={2}>ID</TableHead>
+                <TableHead className="font-semibold" rowSpan={2}>Name</TableHead>
+                <TableHead className="font-semibold" rowSpan={2}>Username</TableHead>
+                <TableHead className="font-semibold" rowSpan={2}>Email</TableHead>
+                <TableHead className="font-semibold" rowSpan={2}>Phone</TableHead>
+                <TableHead className="font-semibold" rowSpan={2}>Website</TableHead>
 
-          {/* BODY */}
-          <tbody>
-            {data?.map((user: User) => (
-              <tr key={user.id} className="hover:bg-gray-100">
-                <Td>{user.id}</Td>
-                <Td>{user.name}</Td>
-                <Td>{user.username}</Td>
-                <Td>{user.email}</Td>
-                <Td>{user.phone}</Td>
+                <TableHead  className="font-semibold text-center" colSpan={6}>
+                  Address
+                </TableHead>
+                <TableHead className="font-semibold text-center" colSpan={3}>
+                  Company
+                </TableHead>
+              </TableRow>
 
-                <Td>
-                  <a
-                    href={`https://${user.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    {user.website}
-                  </a>
-                </Td>
+              <TableRow>
+                <TableHead className="font-semibold">Street</TableHead>
+                <TableHead className="font-semibold">Suite</TableHead>
+                <TableHead className="font-semibold">City</TableHead>
+                <TableHead className="font-semibold">Zip</TableHead>
+                <TableHead className="font-semibold">Lat</TableHead>
+                <TableHead className="font-semibold">Lng</TableHead>
 
-                {/* Address */}
-                <Td>{user.address?.street || "-"}</Td>
-                <Td>{user.address?.suite || "-"}</Td>
-                <Td>{user.address?.city || "-"}</Td>
-                <Td>{user.address?.zipcode || "-"}</Td>
-                <Td>{user.address?.geo.lat || "-"}</Td>
-                <Td>{user.address?.geo.lng || "-"}</Td>
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Phrase</TableHead>
+                <TableHead className="font-semibold">BS</TableHead>
+              </TableRow>
+            </TableHeader>
 
-                {/* Company */}
-                <Td>{user.company?.name || "-"}</Td>
-                <Td className="max-w-[120px]">{user.company?.catchPhrase || "-"}</Td>
-                <Td>{user.company?.bs || "-"}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            {/* BODY */}
+            <TableBody>
+              {data?.map((user: User) => (
+                <TableRow
+                  key={user.id}
+                  className="hover:bg-gray-100 transition"
+                >
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell className="font-medium">
+                    {user.name}
+                  </TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
+
+                  <TableCell>
+                    <a
+                      href={`https://${user.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition"
+                    >
+                      {user.website}
+                    </a>
+                  </TableCell>
+
+                  {/* Address */}
+                  <TableCell>{user.address?.street || "-"}</TableCell>
+                  <TableCell>{user.address?.suite || "-"}</TableCell>
+                  <TableCell>{user.address?.city || "-"}</TableCell>
+                  <TableCell>{user.address?.zipcode || "-"}</TableCell>
+                  <TableCell>{user.address?.geo.lat || "-"}</TableCell>
+                  <TableCell>{user.address?.geo.lng || "-"}</TableCell>
+
+                  {/* Company */}
+                  <TableCell>{user.company?.name || "-"}</TableCell>
+                  <TableCell className="max-w-[120px] truncate">
+                    {user.company?.catchPhrase || "-"}
+                  </TableCell>
+                  <TableCell>{user.company?.bs || "-"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+
+          </Table>
+        </div>
       </div>
     </div>
   );
