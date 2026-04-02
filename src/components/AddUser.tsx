@@ -7,23 +7,24 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import FormField from "./common/FormField"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
-// Zod Schema
+// Schema
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email"),
+
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  company: z.string().optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
-
-// Error styling
-const inputErrorClass = (error?: any) =>
-  error ? "border-red-500 focus-visible:ring-red-500" : ""
 
 export default function AddUser({
   selectedUser,
@@ -32,8 +33,6 @@ export default function AddUser({
   selectedUser: User | null
   setSelectedUser: (user: User | null) => void
 }) {
-
-  // Using custom hooks
   const addMutation = useAddUser()
   const updateMutation = useUpdateUser()
 
@@ -46,110 +45,141 @@ export default function AddUser({
     resolver: zodResolver(formSchema),
   })
 
-  // Prefill on edit
   useEffect(() => {
     if (selectedUser) {
       reset({
         name: selectedUser.name,
         username: selectedUser.username,
         email: selectedUser.email,
+        phone: selectedUser.phone || "",
+        website: selectedUser.website || "",
+        street: selectedUser.address?.street || "",
+        city: selectedUser.address?.city || "",
+        company: selectedUser.company?.name || "",
       })
     }
   }, [selectedUser, reset])
 
-  const onSubmit = (data: FormData) => {
-    if (selectedUser) {
-      updateMutation.mutate(
-        { ...selectedUser, ...data },
-        {
-          onSuccess: () => {
-            setSelectedUser(null)
-          },
-        }
-      )
-    } else {
-      addMutation.mutate(data)
-    }
-
+  const handleClose = () => {
     reset()
+    setSelectedUser(null)
   }
 
+  const onSubmit = (data: FormData) => {
+  const formattedUser: Partial<User> = {
+    ...(selectedUser || {}),
+    ...data,
+    address: {
+      street: data.street || "",
+      suite: "",
+      city: data.city || "",
+      zipcode: "",
+      geo: { lat: "0", lng: "0" },
+    },
+    company: {
+      name: data.company || "",
+      catchPhrase: "",
+      bs: "",
+    },
+  }
+
+  const mutation = selectedUser ? updateMutation : addMutation
+
+  mutation.mutate(formattedUser as User, {
+    onSuccess: () => {
+      toast.success(
+        selectedUser ? "User updated" : "User added successfully"
+      )
+      handleClose()
+    },
+    onError: () => {
+      toast.error("Something went wrong")
+    },
+  })
+}
+
   return (
-    <div className="max-w-7xl mx-auto px-6">
-      <Card className="shadow-sm border rounded-2xl py-4">
-        
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-800">
-            {selectedUser ? "Update User" : "Add New User"}
-          </CardTitle>
-        </CardHeader>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6 pr-1"
+    >
 
-        <CardContent>
-          <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-  
-            {/* Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              
-              <FormField label="Name" error={errors.name?.message}>
-                <Input
-                  {...register("name")}
-                  className={inputErrorClass(errors.name)}
-                />
-              </FormField>
+      <div className="border rounded-xl p-4 space-y-4">
 
-              <FormField label="Username" error={errors.username?.message}>
-                <Input
-                  {...register("username")}
-                  className={inputErrorClass(errors.username)}
-                />
-              </FormField>
+        <h2 className="text-sm font-semibold text-gray-700">
+          User Information
+        </h2>
 
-              <FormField label="Email" error={errors.email?.message}>
-                <Input
-                  type="email"
-                  {...register("email")}
-                  className={inputErrorClass(errors.email)}
-                />
-              </FormField>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Name *" error={errors.name?.message}>
+            <Input {...register("name")} />
+          </FormField>
 
-            </div>
+          <FormField label="Email *" error={errors.email?.message}>
+            <Input {...register("email")} />
+          </FormField>
+        </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end gap-2">
-              
-              {selectedUser && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    reset()
-                    setSelectedUser(null)
-                  }}
-                  className="cursor-pointer"
-                >
-                  Cancel
-                </Button>
-              )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Username *" error={errors.username?.message}>
+            <Input {...register("username")} />
+          </FormField>
 
-              <Button
-                type="submit"
-                disabled={addMutation.isPending || updateMutation.isPending}
-                className="h-10 px-4 cursor-pointer hover:bg-black/80 transition"
-              >
-                {selectedUser
-                  ? updateMutation.isPending
-                    ? "Updating..."
-                    : "Update User"
-                  : addMutation.isPending
-                  ? "Adding..."
-                  : "Add User"}
-              </Button>
+          <FormField label="Phone">
+            <Input {...register("phone")} />
+          </FormField>
+        </div>
 
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Website">
+            <Input {...register("website")} />
+          </FormField>
 
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <FormField label="Company">
+            <Input {...register("company")} />
+          </FormField>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Street">
+            <Input {...register("street")} />
+          </FormField>
+
+          <FormField label="City">
+            <Input {...register("city")} />
+          </FormField>
+        </div>
+
+      </div>
+
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
+
+        <Button
+          type="button"
+          variant="outline"
+          className="cursor-pointer hover:bg-gray-200 transition"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+
+        <Button
+          type="submit"
+          disabled={addMutation.isPending || updateMutation.isPending}
+          className="bg-black text-white hover:bg-black/80 cursor-pointer transition"
+        >
+          {selectedUser
+            ? updateMutation.isPending
+              ? "Updating..."
+              : "Update User"
+            : addMutation.isPending
+            ? "Adding..."
+            : "Add User"}
+        </Button>
+
+      </div>
+
+    </form>
   )
 }

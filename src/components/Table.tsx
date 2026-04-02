@@ -3,6 +3,8 @@ import { useUsers, useDeleteUser } from "../hooks/useUsers"
 import type { User } from "../types"
 
 import ConfirmDialog from "@/components/common/ConfirmDialog"
+import AddUser from "./AddUser"
+import TableSkeleton from "./common/TableSkeleton"
 
 import {
   Table,
@@ -13,18 +15,28 @@ import {
   TableCell,
 } from "@/components/ui/table"
 
-export default function UsersTable({ setSelectedUser }: any) {
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
-  // Hooks
+import { Button } from "@/components/ui/button"
+import { Pencil, Trash2, Plus } from "lucide-react"
+import { toast } from "sonner"
+
+export default function UsersTable() {
   const { data, isLoading, error } = useUsers()
   const deleteMutation = useDeleteUser()
 
-  // Dialog state
-  const [open, setOpen] = useState(false)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
 
-  if (isLoading)
-    return <p className="text-center mt-10 text-gray-500">Loading...</p>
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  if (isLoading) return <TableSkeleton />
 
   if (error)
     return (
@@ -35,60 +47,64 @@ export default function UsersTable({ setSelectedUser }: any) {
 
   return (
     <div className="bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-4">
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-          User Table
-        </h1>
+        {/* Header */}
+        <div className="flex justify-between items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">
+            Users
+          </h1>
 
-        {/* Table Card */}
+          <Button
+            onClick={() => {
+              setSelectedUser(null)
+              setFormOpen(true)
+            }}
+            className="bg-black text-white hover:bg-black/70 cursor-pointer flex items-center gap-2 transition w-auto sm:px-4 sm:py-2 sm:text-base px-2 py-1 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add User
+          </Button>
+        </div>
+
+        {/* Table */}
         <div className="bg-white rounded-2xl shadow-md border overflow-x-auto">
+          <Table className="min-w-[1200px] text-xs">
 
-          <Table className="min-w-[1100px] text-xs">
-
-            {/* Header */}
             <TableHeader className="bg-gray-100 text-gray-700 border-b sticky top-0 z-10">
               <TableRow>
-                <TableHead rowSpan={2}>ID</TableHead>
-                <TableHead rowSpan={2}>Name</TableHead>
-                <TableHead rowSpan={2}>Username</TableHead>
-                <TableHead rowSpan={2}>Email</TableHead>
-                <TableHead rowSpan={2}>Phone</TableHead>
-                <TableHead rowSpan={2}>Website</TableHead>
-
-                <TableHead colSpan={6} className="text-center">
-                  Address
+                <TableHead className="sticky left-0 bg-gray-100 z-20">
+                  ID
                 </TableHead>
-                <TableHead colSpan={3} className="text-center">
-                  Company
-                </TableHead>
-
-                <TableHead rowSpan={2} className="text-center">
-                  Actions
-                </TableHead>
-              </TableRow>
-
-              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Website</TableHead>
                 <TableHead>Street</TableHead>
                 <TableHead>Suite</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Zip</TableHead>
                 <TableHead>Lat</TableHead>
                 <TableHead>Lng</TableHead>
-
-                <TableHead>Name</TableHead>
+                <TableHead>Company</TableHead>
                 <TableHead>Phrase</TableHead>
                 <TableHead>BS</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
 
-            {/* Body */}
             <TableBody>
               {data?.map((user: User) => (
-                <TableRow key={user.id} className="hover:bg-gray-100 transition">
+                <TableRow
+                  key={user.id}
+                  className="group even:bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  {/* Sticky ID with zebra FIX */}
+                  <TableCell className="sticky left-0 font-medium bg-white even:bg-gray-50 group-hover:bg-gray-100">
+                    {user.id}
+                  </TableCell>
 
-                  <TableCell>{user.id}</TableCell>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -99,21 +115,19 @@ export default function UsersTable({ setSelectedUser }: any) {
                       href={`https://${user.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition"
+                      className="text-blue-500 hover:underline"
                     >
                       {user.website}
                     </a>
                   </TableCell>
 
-                  {/* Address */}
                   <TableCell>{user.address?.street || "-"}</TableCell>
                   <TableCell>{user.address?.suite || "-"}</TableCell>
                   <TableCell>{user.address?.city || "-"}</TableCell>
                   <TableCell>{user.address?.zipcode || "-"}</TableCell>
-                  <TableCell>{user.address?.geo.lat || "-"}</TableCell>
-                  <TableCell>{user.address?.geo.lng || "-"}</TableCell>
+                  <TableCell>{user.address?.geo?.lat || "-"}</TableCell>
+                  <TableCell>{user.address?.geo?.lng || "-"}</TableCell>
 
-                  {/* Company */}
                   <TableCell>{user.company?.name || "-"}</TableCell>
                   <TableCell className="max-w-[120px] truncate">
                     {user.company?.catchPhrase || "-"}
@@ -121,27 +135,26 @@ export default function UsersTable({ setSelectedUser }: any) {
                   <TableCell>{user.company?.bs || "-"}</TableCell>
 
                   {/* Actions */}
-                  <TableCell className="space-x-2 text-center">
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-3">
 
-                    {/* Edit */}
-                    <button
-                      onClick={() => setSelectedUser(user)}
-                      className="text-blue-500 hover:underline cursor-pointer"
-                    >
-                      Edit
-                    </button>
+                      <Pencil
+                        className="w-4 h-4 cursor-pointer text-gray-600 hover:text-blue-500"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setFormOpen(true)
+                        }}
+                      />
 
-                    {/* Delete */}
-                    <button
-                      onClick={() => {
-                        setSelectedId(user.id)
-                        setOpen(true)
-                      }}
-                      className="text-red-500 hover:underline cursor-pointer"
-                    >
-                      Delete
-                    </button>
+                      <Trash2
+                        className="w-4 h-4 cursor-pointer text-gray-600 hover:text-red-500"
+                        onClick={() => {
+                          setSelectedId(user.id)
+                          setDeleteOpen(true)
+                        }}
+                      />
 
+                    </div>
                   </TableCell>
 
                 </TableRow>
@@ -151,17 +164,43 @@ export default function UsersTable({ setSelectedUser }: any) {
           </Table>
         </div>
 
+        {/* Dialog */}
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto [&>button]:cursor-pointer">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedUser ? "Update User" : "Add User"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <p className="text-sm text-gray-500">
+              Fill in the user details.
+            </p>
+
+            <AddUser
+              selectedUser={selectedUser}
+              setSelectedUser={(user) => {
+                setSelectedUser(user)
+                if (!user) setFormOpen(false)
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete */}
         <ConfirmDialog
-          open={open}
-          onOpenChange={setOpen}
-          title="Are you sure?"
-          description="This action cannot be undone."
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
           onConfirm={() => {
             if (selectedId) {
               deleteMutation.mutate(selectedId, {
                 onSuccess: () => {
-                  setOpen(false)       
-                  setSelectedId(null)  
+                  toast.success("User deleted successfully")
+                  setDeleteOpen(false)
+                  setSelectedId(null)
+                },
+                onError: () => {
+                  toast.error("Failed to delete user")
                 },
               })
             }

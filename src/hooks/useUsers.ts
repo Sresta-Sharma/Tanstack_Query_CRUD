@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { fetchUsers, addUser, updateUser, deleteUser } from "../api/api"
 import type { User } from "../types"
-import { toast } from "sonner"
+import { QUERY_KEYS } from "../constants/queryKeys"
 
 export const useUsers = () => {
   return useQuery<User[]>({
-    queryKey: ["users"],
+    queryKey: QUERY_KEYS.USERS,
     queryFn: fetchUsers,
   })
 }
@@ -16,13 +16,11 @@ export const useAddUser = () => {
   return useMutation({
     mutationFn: addUser,
     onSuccess: (newUser) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) => [
+      queryClient.setQueryData(QUERY_KEYS.USERS, (old: User[] = []) => [
         ...old,
         { ...newUser, id: old.length + 1 },
       ])
-      toast.success("User added successfully")
     },
-    onError: () => toast.error("Failed to add user"),
   })
 }
 
@@ -32,12 +30,10 @@ export const useUpdateUser = () => {
   return useMutation({
     mutationFn: updateUser,
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) =>
+      queryClient.setQueryData(QUERY_KEYS.USERS, (old: User[] = []) =>
         old.map((u) => (u.id === updatedUser.id ? updatedUser : u))
       )
-      toast.success("User updated successfully")
     },
-    onError: () => toast.error("Failed to update user"),
   })
 }
 
@@ -47,11 +43,9 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: deleteUser,
     onSuccess: (id) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) =>
+      queryClient.setQueryData(QUERY_KEYS.USERS, (old: User[] = []) =>
         old.filter((user) => user.id !== id)
       )
-      toast.success("User deleted successfully")
     },
-    onError: () => toast.error("Failed to delete user"),
   })
 }
