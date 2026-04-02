@@ -139,7 +139,7 @@ export default function UsersTable() {
                     <div className="flex justify-center gap-3">
 
                       <Pencil
-                        className="w-4 h-4 cursor-pointer text-gray-600 hover:text-blue-500"
+                        className="w-4 h-4 cursor-pointer text-blue-500 hover:text-blue-700"
                         onClick={() => {
                           setSelectedUser(user)
                           setFormOpen(true)
@@ -147,7 +147,7 @@ export default function UsersTable() {
                       />
 
                       <Trash2
-                        className="w-4 h-4 cursor-pointer text-gray-600 hover:text-red-500"
+                        className="w-4 h-4 cursor-pointer text-red-500 hover:text-red-700"
                         onClick={() => {
                           setSelectedId(user.id)
                           setDeleteOpen(true)
